@@ -48,16 +48,10 @@ var renderTextLayer = (function renderTextLayerClosure() {
     return !NonWhitespaceRegexp.test(str);
   }
 
-  // Text layers may contain many thousands of divs, and using `styleBuf` avoids
-  // creating many intermediate strings when building their 'style' properties.
-  var styleBuf = ['left: ', 0, 'px; top: ', 0, 'px; font-size: ', 0,
-                  'px; font-family: ', '', ';'];
-
   function appendText(task, geom, styles) {
     // Initialize all used properties to keep the caches monomorphic.
     var textDiv = document.createElement('span');
     var textDivProperties = {
-      style: null,
       angle: 0,
       canvasWidth: 0,
       isWhitespace: false,
@@ -99,12 +93,10 @@ var renderTextLayer = (function renderTextLayerClosure() {
       left = tx[4] + (fontAscent * Math.sin(angle));
       top = tx[5] - (fontAscent * Math.cos(angle));
     }
-    styleBuf[1] = left;
-    styleBuf[3] = top;
-    styleBuf[5] = fontHeight;
-    styleBuf[7] = style.fontFamily;
-    textDivProperties.style = styleBuf.join('');
-    textDiv.setAttribute('style', textDivProperties.style);
+    textDiv.style.left = left + 'px';
+    textDiv.style.top = top + 'px';
+    textDiv.style.fontSize = fontHeight + 'px';
+    textDiv.style.fontFamily = style.fontFamily;
 
     textDiv.textContent = geom.str;
     // `fontName` is only used by the FontInspector, and we only use `dataset`
@@ -621,7 +613,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
           continue;
         }
         if (expandDivs) {
-          var transform = '', padding = '';
+          var transform = '';
 
           if (divProperties.scale !== 1) {
             transform = 'scaleX(' + divProperties.scale + ')';
@@ -630,26 +622,21 @@ var renderTextLayer = (function renderTextLayerClosure() {
             transform = 'rotate(' + divProperties.angle + 'deg) ' + transform;
           }
           if (divProperties.paddingLeft !== 0) {
-            padding += ' padding-left: ' +
-              (divProperties.paddingLeft / divProperties.scale) + 'px;';
+            div.style.paddingLeft =
+              (divProperties.paddingLeft / divProperties.scale) + 'px';
             transform += ' translateX(' +
               (-divProperties.paddingLeft / divProperties.scale) + 'px)';
           }
           if (divProperties.paddingTop !== 0) {
-            padding += ' padding-top: ' + divProperties.paddingTop + 'px;';
+            div.style.paddingTop = divProperties.paddingTop + 'px';
             transform += ' translateY(' + (-divProperties.paddingTop) + 'px)';
           }
           if (divProperties.paddingRight !== 0) {
-            padding += ' padding-right: ' +
-              (divProperties.paddingRight / divProperties.scale) + 'px;';
+            div.style.paddingRight =
+              (divProperties.paddingRight / divProperties.scale) + 'px';
           }
           if (divProperties.paddingBottom !== 0) {
-            padding += ' padding-bottom: ' +
-              divProperties.paddingBottom + 'px;';
-          }
-
-          if (padding !== '') {
-            div.setAttribute('style', divProperties.style + padding);
+            div.style.paddingBottom = divProperties.paddingBottom + 'px';
           }
           if (transform !== '') {
             div.style.transform = transform;
